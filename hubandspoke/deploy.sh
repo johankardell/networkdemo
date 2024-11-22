@@ -1,0 +1,1 @@
+az deployment sub create --name networkdemo --parameters main.bicepparam -l swedencentral
