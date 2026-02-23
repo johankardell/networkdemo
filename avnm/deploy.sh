@@ -17,19 +17,23 @@ fi
 
 echo "Deploying AVNM demo infrastructure to ${LOCATION}..."
 
-DEPLOYMENT_OUTPUT=$(az deployment sub create \
+DEPLOYMENT_NAME="avnm-demo-$(date +%Y%m%d%H%M%S)"
+
+az deployment sub create \
   --location "$LOCATION" \
   --template-file "$TEMPLATE_FILE" \
   --parameters "$PARAMS_FILE" \
-  --name "avnm-demo-$(date +%Y%m%d%H%M%S)" \
-  --query 'properties.outputs' -o json)
+  --name "$DEPLOYMENT_NAME" \
+  --no-wait false
 
-echo "Infrastructure deployed. Committing AVNM configurations..."
+echo "Infrastructure deployed. Reading outputs..."
 
-MESH_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.meshConnectivityConfigId.value')
-HUBSPOKE_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.hubSpokeConnectivityConfigId.value')
-SECURITY_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.securityAdminConfigId.value')
-ROUTING_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.routingConfigId.value')
+MESH_CONFIG_ID=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query 'properties.outputs.meshConnectivityConfigId.value' -o tsv)
+HUBSPOKE_CONFIG_ID=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query 'properties.outputs.hubSpokeConnectivityConfigId.value' -o tsv)
+SECURITY_CONFIG_ID=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query 'properties.outputs.securityAdminConfigId.value' -o tsv)
+ROUTING_CONFIG_ID=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query 'properties.outputs.routingConfigId.value' -o tsv)
+
+echo "Committing AVNM configurations..."
 
 # Commit connectivity configurations
 echo "  Committing connectivity configurations..."
