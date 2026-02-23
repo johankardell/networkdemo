@@ -35,4 +35,4 @@ resource ruleCollection 'Microsoft.Network/networkManagers/securityAdminConfigur
 
 output configId string = securityAdminConfig.id
 output configName string = securityAdminConfig.name
-output ruleCollectionName string = ruleCollection.name
+output ruleCollectionName string = '${securityAdminConfig.name}/${ruleCollection.name}'
