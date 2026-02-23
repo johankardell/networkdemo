@@ -29,6 +29,7 @@ echo "Infrastructure deployed. Committing AVNM configurations..."
 MESH_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.meshConnectivityConfigId.value')
 HUBSPOKE_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.hubSpokeConnectivityConfigId.value')
 SECURITY_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.securityAdminConfigId.value')
+ROUTING_CONFIG_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.routingConfigId.value')
 
 # Commit connectivity configurations
 echo "  Committing connectivity configurations..."
@@ -37,6 +38,15 @@ az network manager post-commit \
   --resource-group "$AVNM_RG" \
   --commit-type "Connectivity" \
   --configuration-ids "$MESH_CONFIG_ID" "$HUBSPOKE_CONFIG_ID" \
+  --target-locations "$LOCATION"
+
+# Commit routing configuration
+echo "  Committing routing configuration..."
+az network manager post-commit \
+  --network-manager-name "$AVNM_NAME" \
+  --resource-group "$AVNM_RG" \
+  --commit-type "Routing" \
+  --configuration-ids "$ROUTING_CONFIG_ID" \
   --target-locations "$LOCATION"
 
 # Commit security admin configuration

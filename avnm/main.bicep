@@ -125,8 +125,23 @@ var hubAndSpokeVnets = [
   { name: 'vnet-spoke2', addressPrefix: '10.12.0.0/16', subnetPrefix: '10.12.0.0/24' }
 ]
 
+var hubFirewallSubnets = [
+  {
+    name: 'AzureFirewallSubnet'
+    properties: {
+      addressPrefix: '10.10.1.0/26'
+    }
+  }
+  {
+    name: 'AzureFirewallManagementSubnet'
+    properties: {
+      addressPrefix: '10.10.1.64/26'
+    }
+  }
+]
+
 module hubSpokeVnetDeployments 'modules/virtualNetwork.bicep' = [
-  for vnet in hubAndSpokeVnets: {
+  for (vnet, i) in hubAndSpokeVnets: {
     name: 'deploy-hs-${vnet.name}'
     scope: rgHubAndSpoke
     params: {
@@ -134,10 +149,27 @@ module hubSpokeVnetDeployments 'modules/virtualNetwork.bicep' = [
       location: location
       addressPrefix: vnet.addressPrefix
       subnetAddressPrefix: vnet.subnetPrefix
+      additionalSubnets: i == 0 ? hubFirewallSubnets : []
       tags: tags
     }
   }
 ]
+
+// ---------------------------------------------------------------------------
+// Azure Firewall (vnet-hub)
+// ---------------------------------------------------------------------------
+
+module hubFirewall 'modules/azureFirewall.bicep' = {
+  name: 'deploy-hub-firewall'
+  scope: rgHubAndSpoke
+  params: {
+    name: 'fw-hub'
+    location: location
+    firewallSubnetId: hubSpokeVnetDeployments[0].outputs.subnets[1].id
+    managementSubnetId: hubSpokeVnetDeployments[0].outputs.subnets[2].id
+    tags: tags
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Spoke VMs (avnm-hubnspoke)
@@ -191,6 +223,33 @@ module hubSpokeConnectivityConfig 'modules/connectivityConfiguration.bicep' = {
     hubVnetId: hubSpokeVnetDeployments[0].outputs.id // vnet-hub
     networkGroupIds: [
       hubSpokeNetworkGroup.outputs.id
+    ]
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AVNM Routing Configuration (spoke traffic via Azure Firewall)
+// ---------------------------------------------------------------------------
+
+module hubSpokeRoutingConfig 'modules/routingConfiguration.bicep' = {
+  name: 'deploy-hubspoke-routing-config'
+  scope: rgAvnmManager
+  params: {
+    name: 'rtc-hubspoke'
+    networkManagerName: avnm.outputs.name
+    configDescription: 'Route spoke traffic through Azure Firewall in vnet-hub'
+    networkGroupIds: [
+      hubSpokeNetworkGroup.outputs.id
+    ]
+    rules: [
+      {
+        name: 'default-to-firewall'
+        description: 'Route all traffic through Azure Firewall'
+        destinationAddress: '0.0.0.0/0'
+        destinationType: 'AddressPrefix'
+        nextHopType: 'VirtualAppliance'
+        nextHopAddress: hubFirewall.outputs.privateIp
+      }
     ]
   }
 }
@@ -351,3 +410,4 @@ output avnmName string = avnm.outputs.name
 output meshConnectivityConfigId string = meshConnectivityConfig.outputs.id
 output hubSpokeConnectivityConfigId string = hubSpokeConnectivityConfig.outputs.id
 output securityAdminConfigId string = securityAdminConfig.outputs.configId
+output routingConfigId string = hubSpokeRoutingConfig.outputs.configId

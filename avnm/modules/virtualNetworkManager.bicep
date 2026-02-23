@@ -22,6 +22,7 @@ resource networkManager 'Microsoft.Network/networkManagers@2024-05-01' = {
     }
     networkManagerScopeAccesses: [
       'Connectivity'
+      'Routing'
       'SecurityAdmin'
     ]
   }

@@ -16,6 +16,23 @@ param tags object = {}
 @description('Optional NSG resource ID to associate with the default subnet.')
 param nsgId string = ''
 
+@description('Additional subnets beyond the default subnet.')
+param additionalSubnets array = []
+
+var defaultSubnet = [
+  {
+    name: 'default'
+    properties: {
+      addressPrefix: subnetAddressPrefix
+      networkSecurityGroup: !empty(nsgId)
+        ? {
+            id: nsgId
+          }
+        : null
+    }
+  }
+]
+
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: name
   location: location
@@ -26,22 +43,11 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
         addressPrefix
       ]
     }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: subnetAddressPrefix
-          networkSecurityGroup: !empty(nsgId)
-            ? {
-                id: nsgId
-              }
-            : null
-        }
-      }
-    ]
+    subnets: concat(defaultSubnet, additionalSubnets)
   }
 }
 
 output id string = virtualNetwork.id
 output name string = virtualNetwork.name
 output defaultSubnetId string = virtualNetwork.properties.subnets[0].id
+output subnets array = virtualNetwork.properties.subnets
