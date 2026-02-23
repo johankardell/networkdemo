@@ -6,3 +6,5 @@ param tags = {
   environment: 'demo'
   project: 'avnm-demo'
 }
+
+param sshPublicKey = readEnvironmentVariable('SSH_PUBLIC_KEY')

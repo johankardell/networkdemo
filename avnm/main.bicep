@@ -6,6 +6,10 @@ param location string
 @description('Tags to apply to all resources.')
 param tags object = {}
 
+@description('SSH public key for VM authentication.')
+@secure()
+param sshPublicKey string
+
 // ---------------------------------------------------------------------------
 // Resource Groups
 // ---------------------------------------------------------------------------
@@ -154,6 +158,29 @@ module hubSpokeVnetDeployments 'modules/virtualNetwork.bicep' = [
       location: location
       addressPrefix: vnet.addressPrefix
       subnetAddressPrefix: vnet.subnetPrefix
+      tags: tags
+    }
+  }
+]
+
+// ---------------------------------------------------------------------------
+// Spoke VMs (avnm-hubnspoke)
+// ---------------------------------------------------------------------------
+
+var spokeVms = [
+  { name: 'vm-spoke1', subnetIndex: 1 }
+  { name: 'vm-spoke2', subnetIndex: 2 }
+]
+
+module spokeVmDeployments 'modules/linuxVm.bicep' = [
+  for spokeVm in spokeVms: {
+    name: 'deploy-${spokeVm.name}'
+    scope: rgHubAndSpoke
+    params: {
+      name: spokeVm.name
+      location: location
+      subnetId: hubSpokeVnetDeployments[spokeVm.subnetIndex].outputs.defaultSubnetId
+      sshPublicKey: sshPublicKey
       tags: tags
     }
   }
