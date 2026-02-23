@@ -28,6 +28,12 @@ resource rgHubAndSpoke 'Microsoft.Resources/resourceGroups@2024-07-01' = {
   tags: tags
 }
 
+resource rgIpam 'Microsoft.Resources/resourceGroups@2024-07-01' = {
+  name: 'avnm-ipam'
+  location: location
+  tags: tags
+}
+
 // ---------------------------------------------------------------------------
 // Azure Virtual Network Manager
 // ---------------------------------------------------------------------------
@@ -155,3 +161,66 @@ module hubSpokeConnectivityConfig 'modules/connectivityConfiguration.bicep' = {
     ]
   }
 }
+
+// ---------------------------------------------------------------------------
+// IPAM Pool (avnm-manager)
+// ---------------------------------------------------------------------------
+
+module ipamPool 'modules/ipamPool.bicep' = {
+  name: 'deploy-ipam-pool'
+  scope: rgAvnmManager
+  params: {
+    name: 'ipam-pool-demo'
+    location: location
+    networkManagerName: avnm.outputs.name
+    addressPrefixes: [
+      '192.168.0.0/16'
+    ]
+    displayName: 'Demo IPAM Pool'
+    poolDescription: 'Root IPAM pool for address management demo'
+    tags: tags
+  }
+}
+
+// ---------------------------------------------------------------------------
+// IPAM Static CIDRs & VNets (avnm-ipam)
+// ---------------------------------------------------------------------------
+
+var ipamVnets = [
+  { name: 'vnet-ipam-1', addressPrefix: '192.168.1.0/24', subnetPrefix: '192.168.1.0/25' }
+  { name: 'vnet-ipam-2', addressPrefix: '192.168.2.0/24', subnetPrefix: '192.168.2.0/25' }
+  { name: 'vnet-ipam-3', addressPrefix: '192.168.3.0/24', subnetPrefix: '192.168.3.0/25' }
+]
+
+module ipamStaticCidrs 'modules/staticCidr.bicep' = [
+  for vnet in ipamVnets: {
+    name: 'deploy-cidr-${vnet.name}'
+    scope: rgAvnmManager
+    params: {
+      name: vnet.name
+      networkManagerName: avnm.outputs.name
+      ipamPoolName: ipamPool.outputs.name
+      addressPrefixes: [
+        vnet.addressPrefix
+      ]
+      cidrDescription: 'Static CIDR allocation for ${vnet.name}'
+    }
+  }
+]
+
+module ipamVnetDeployments 'modules/virtualNetwork.bicep' = [
+  for (vnet, i) in ipamVnets: {
+    name: 'deploy-ipam-${vnet.name}'
+    scope: rgIpam
+    params: {
+      name: vnet.name
+      location: location
+      addressPrefix: vnet.addressPrefix
+      subnetAddressPrefix: vnet.subnetPrefix
+      tags: tags
+    }
+    dependsOn: [
+      ipamStaticCidrs[i]
+    ]
+  }
+]
