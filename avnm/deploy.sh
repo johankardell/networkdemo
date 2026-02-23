@@ -23,8 +23,7 @@ az deployment sub create \
   --location "$LOCATION" \
   --template-file "$TEMPLATE_FILE" \
   --parameters "$PARAMS_FILE" \
-  --name "$DEPLOYMENT_NAME" \
-  --no-wait false
+  --name "$DEPLOYMENT_NAME"
 
 echo "Infrastructure deployed. Reading outputs..."
 
