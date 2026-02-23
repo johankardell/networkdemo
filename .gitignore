@@ -1,0 +1,16 @@
+# Bicep build output
+*.json
+!bicepconfig.json
+
+# Azure CLI
+.azure/
+
+# Editor
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
