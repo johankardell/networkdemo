@@ -15,7 +15,7 @@ param adminUsername string = 'azureuser'
 param sshPublicKey string
 
 @description('VM size.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_D2as_v5'
 
 @description('Tags to apply.')
 param tags object = {}
