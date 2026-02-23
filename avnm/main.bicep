@@ -122,3 +122,36 @@ module hubSpokeVnetDeployments 'modules/virtualNetwork.bicep' = [
     }
   }
 ]
+
+// ---------------------------------------------------------------------------
+// Hub & Spoke Network Group & Connectivity Configuration
+// ---------------------------------------------------------------------------
+
+module hubSpokeNetworkGroup 'modules/networkGroup.bicep' = {
+  name: 'deploy-hubspoke-network-group'
+  scope: rgAvnmManager
+  params: {
+    name: 'ng-hubspoke'
+    networkManagerName: avnm.outputs.name
+    groupDescription: 'Network group for hub-and-spoke VNets (spokes only)'
+    memberVnetIds: [
+      hubSpokeVnetDeployments[1].outputs.id // vnet-spoke1
+      hubSpokeVnetDeployments[2].outputs.id // vnet-spoke2
+    ]
+  }
+}
+
+module hubSpokeConnectivityConfig 'modules/connectivityConfiguration.bicep' = {
+  name: 'deploy-hubspoke-connectivity-config'
+  scope: rgAvnmManager
+  params: {
+    name: 'cc-hubspoke'
+    networkManagerName: avnm.outputs.name
+    topology: 'HubAndSpoke'
+    configDescription: 'Hub-and-spoke connectivity for avnm-hubnspoke VNets'
+    hubVnetId: hubSpokeVnetDeployments[0].outputs.id // vnet-hub
+    networkGroupIds: [
+      hubSpokeNetworkGroup.outputs.id
+    ]
+  }
+}

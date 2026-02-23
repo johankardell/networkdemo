@@ -17,15 +17,26 @@ param networkGroupIds array
 @description('Description of the connectivity configuration.')
 param configDescription string = ''
 
+@description('Hub VNet resource ID. Required when topology is HubAndSpoke.')
+param hubVnetId string = ''
+
 resource connectivityConfig 'Microsoft.Network/networkManagers/connectivityConfigurations@2024-05-01' = {
   name: '${networkManagerName}/${name}'
   properties: {
     description: configDescription
     connectivityTopology: topology
+    hubs: topology == 'HubAndSpoke'
+      ? [
+          {
+            resourceId: hubVnetId
+            resourceType: 'Microsoft.Network/virtualNetworks'
+          }
+        ]
+      : []
     appliesToGroups: [
       for groupId in networkGroupIds: {
         networkGroupId: groupId
-        groupConnectivity: 'DirectlyConnected'
+        groupConnectivity: topology == 'Mesh' ? 'DirectlyConnected' : 'None'
         useHubGateway: 'False'
         isGlobal: 'False'
       }
