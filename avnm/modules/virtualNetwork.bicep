@@ -13,6 +13,9 @@ param subnetAddressPrefix string
 @description('Tags to apply to the virtual network.')
 param tags object = {}
 
+@description('Optional NSG resource ID to associate with the default subnet.')
+param nsgId string = ''
+
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: name
   location: location
@@ -28,6 +31,11 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
         name: 'default'
         properties: {
           addressPrefix: subnetAddressPrefix
+          networkSecurityGroup: !empty(nsgId)
+            ? {
+                id: nsgId
+              }
+            : null
         }
       }
     ]

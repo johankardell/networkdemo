@@ -34,6 +34,12 @@ resource rgIpam 'Microsoft.Resources/resourceGroups@2024-07-01' = {
   tags: tags
 }
 
+resource rgSecurity 'Microsoft.Resources/resourceGroups@2024-07-01' = {
+  name: 'avnm-security'
+  location: location
+  tags: tags
+}
+
 // ---------------------------------------------------------------------------
 // Azure Virtual Network Manager
 // ---------------------------------------------------------------------------
@@ -223,3 +229,30 @@ module ipamVnetDeployments 'modules/virtualNetwork.bicep' = [
     ]
   }
 ]
+
+// ---------------------------------------------------------------------------
+// Security VNet & NSG (avnm-security)
+// ---------------------------------------------------------------------------
+
+module securityNsg 'modules/networkSecurityGroup.bicep' = {
+  name: 'deploy-nsg-security'
+  scope: rgSecurity
+  params: {
+    name: 'nsg-security'
+    location: location
+    tags: tags
+  }
+}
+
+module securityVnet 'modules/virtualNetwork.bicep' = {
+  name: 'deploy-vnet-sec'
+  scope: rgSecurity
+  params: {
+    name: 'vnet-sec'
+    location: location
+    addressPrefix: '10.20.0.0/16'
+    subnetAddressPrefix: '10.20.0.0/24'
+    nsgId: securityNsg.outputs.id
+    tags: tags
+  }
+}
