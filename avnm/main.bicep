@@ -256,3 +256,16 @@ module securityVnet 'modules/virtualNetwork.bicep' = {
     tags: tags
   }
 }
+
+module securityNetworkGroup 'modules/networkGroup.bicep' = {
+  name: 'deploy-security-network-group'
+  scope: rgAvnmManager
+  params: {
+    name: 'ng-security'
+    networkManagerName: avnm.outputs.name
+    groupDescription: 'Network group for security admin configuration'
+    memberVnetIds: [
+      securityVnet.outputs.id
+    ]
+  }
+}
