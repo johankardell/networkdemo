@@ -56,6 +56,30 @@ module avnm 'modules/virtualNetworkManager.bicep' = {
 }
 
 // ---------------------------------------------------------------------------
+// Managed Identity for AVNM Commit Deployments
+// ---------------------------------------------------------------------------
+
+module commitIdentity 'modules/userAssignedIdentity.bicep' = {
+  name: 'deploy-avnm-commit-identity'
+  scope: rgAvnmManager
+  params: {
+    name: 'id-avnm-commit'
+    location: location
+    tags: tags
+  }
+}
+
+// Network Contributor role on the subscription so the identity can commit AVNM configs
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(subscription().id, commitIdentity.name, 'Network Contributor')
+  properties: {
+    principalId: commitIdentity.outputs.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Mesh VNets (avnm-mesh)
 // ---------------------------------------------------------------------------
 
@@ -314,4 +338,54 @@ module allowPort9090Rule 'modules/securityAdminRule.bicep' = {
       }
     ]
   }
+}
+
+// ---------------------------------------------------------------------------
+// Commit AVNM Configurations
+// ---------------------------------------------------------------------------
+
+module commitConnectivity 'modules/avnmCommit.bicep' = {
+  name: 'commit-connectivity-configs'
+  scope: rgAvnmManager
+  params: {
+    location: location
+    userAssignedIdentityId: commitIdentity.outputs.id
+    networkManagerName: 'avnm-demo'
+    resourceGroupName: rgAvnmManager.name
+    commitType: 'Connectivity'
+    targetLocations: [
+      location
+    ]
+    configurationIds: [
+      meshConnectivityConfig.outputs.id
+      hubSpokeConnectivityConfig.outputs.id
+    ]
+    deploymentScriptName: 'ds-commit-connectivity'
+  }
+  dependsOn: [
+    roleAssignment
+  ]
+}
+
+module commitSecurityAdmin 'modules/avnmCommit.bicep' = {
+  name: 'commit-security-admin-config'
+  scope: rgAvnmManager
+  params: {
+    location: location
+    userAssignedIdentityId: commitIdentity.outputs.id
+    networkManagerName: 'avnm-demo'
+    resourceGroupName: rgAvnmManager.name
+    commitType: 'SecurityAdmin'
+    targetLocations: [
+      location
+    ]
+    configurationIds: [
+      securityAdminConfig.outputs.configId
+    ]
+    deploymentScriptName: 'ds-commit-securityadmin'
+  }
+  dependsOn: [
+    roleAssignment
+    allowPort9090Rule
+  ]
 }
