@@ -269,3 +269,49 @@ module securityNetworkGroup 'modules/networkGroup.bicep' = {
     ]
   }
 }
+
+// ---------------------------------------------------------------------------
+// Security Admin Configuration & Rule
+// ---------------------------------------------------------------------------
+
+module securityAdminConfig 'modules/securityAdminConfiguration.bicep' = {
+  name: 'deploy-security-admin-config'
+  scope: rgAvnmManager
+  params: {
+    name: 'sac-security'
+    networkManagerName: avnm.outputs.name
+    configDescription: 'Security admin configuration for ng-security'
+    networkGroupIds: [
+      securityNetworkGroup.outputs.id
+    ]
+  }
+}
+
+module allowPort9090Rule 'modules/securityAdminRule.bicep' = {
+  name: 'deploy-allow-port-9090-rule'
+  scope: rgAvnmManager
+  params: {
+    name: 'always-allow-9090'
+    ruleCollectionName: securityAdminConfig.outputs.ruleCollectionName
+    access: 'AlwaysAllow'
+    direction: 'Inbound'
+    priority: 100
+    protocol: 'Tcp'
+    ruleDescription: 'Always allow inbound TCP port 9090'
+    destinationPortRanges: [
+      '9090'
+    ]
+    sources: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+    destinations: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+  }
+}
