@@ -69,6 +69,37 @@ module meshVnetDeployments 'modules/virtualNetwork.bicep' = [
 ]
 
 // ---------------------------------------------------------------------------
+// Mesh Network Group & Connectivity Configuration
+// ---------------------------------------------------------------------------
+
+module meshNetworkGroup 'modules/networkGroup.bicep' = {
+  name: 'deploy-mesh-network-group'
+  scope: rgAvnmManager
+  params: {
+    name: 'ng-mesh'
+    networkManagerName: avnm.outputs.name
+    groupDescription: 'Network group for mesh-connected VNets'
+    memberVnetIds: [
+      for (vnet, i) in meshVnets: meshVnetDeployments[i].outputs.id
+    ]
+  }
+}
+
+module meshConnectivityConfig 'modules/connectivityConfiguration.bicep' = {
+  name: 'deploy-mesh-connectivity-config'
+  scope: rgAvnmManager
+  params: {
+    name: 'cc-mesh'
+    networkManagerName: avnm.outputs.name
+    topology: 'Mesh'
+    configDescription: 'Mesh connectivity for avnm-mesh VNets'
+    networkGroupIds: [
+      meshNetworkGroup.outputs.id
+    ]
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hub & Spoke VNets (avnm-hubnspoke)
 // ---------------------------------------------------------------------------
 
