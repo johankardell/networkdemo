@@ -198,7 +198,6 @@ module ipamStaticCidrs 'modules/staticCidr.bicep' = [
     scope: rgAvnmManager
     params: {
       name: vnet.name
-      networkManagerName: avnm.outputs.name
       ipamPoolName: ipamPool.outputs.name
       addressPrefixes: [
         vnet.addressPrefix
