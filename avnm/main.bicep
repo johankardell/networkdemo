@@ -177,6 +177,12 @@ var hubFirewallSubnets = [
       addressPrefix: '10.10.1.64/26'
     }
   }
+  {
+    name: 'AzureBastionSubnet'
+    properties: {
+      addressPrefix: '10.10.1.128/26'
+    }
+  }
 ]
 
 module hubSpokeVnetDeployments 'modules/virtualNetwork.bicep' = [
@@ -206,6 +212,17 @@ module hubFirewall 'modules/azureFirewall.bicep' = {
     location: location
     firewallSubnetId: hubSpokeVnetDeployments[0].outputs.subnets[1].id
     managementSubnetId: hubSpokeVnetDeployments[0].outputs.subnets[2].id
+    tags: tags
+  }
+}
+
+module hubBastion 'modules/bastion.bicep' = {
+  name: 'deploy-bastion-hub'
+  scope: rgHubAndSpoke
+  params: {
+    name: 'bas-hub'
+    location: location
+    bastionSubnetId: hubSpokeVnetDeployments[0].outputs.subnets[3].id
     tags: tags
   }
 }
