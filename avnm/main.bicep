@@ -70,8 +70,17 @@ var meshVnets = [
   { name: 'vnet-4', addressPrefix: '10.3.0.0/16', subnetPrefix: '10.3.0.0/24' }
 ]
 
+var bastionSubnet = [
+  {
+    name: 'AzureBastionSubnet'
+    properties: {
+      addressPrefix: '10.0.1.0/26'
+    }
+  }
+]
+
 module meshVnetDeployments 'modules/virtualNetwork.bicep' = [
-  for vnet in meshVnets: {
+  for (vnet, i) in meshVnets: {
     name: 'deploy-mesh-${vnet.name}'
     scope: rgMesh
     params: {
@@ -79,10 +88,22 @@ module meshVnetDeployments 'modules/virtualNetwork.bicep' = [
       location: location
       addressPrefix: vnet.addressPrefix
       subnetAddressPrefix: vnet.subnetPrefix
+      additionalSubnets: i == 0 ? bastionSubnet : []
       tags: union(tags, { mesh: 'true' })
     }
   }
 ]
+
+module meshBastion 'modules/bastion.bicep' = {
+  name: 'deploy-bastion-mesh'
+  scope: rgMesh
+  params: {
+    name: 'bas-mesh'
+    location: location
+    bastionSubnetId: meshVnetDeployments[0].outputs.subnets[1].id
+    tags: tags
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Mesh VMs (avnm-mesh)
