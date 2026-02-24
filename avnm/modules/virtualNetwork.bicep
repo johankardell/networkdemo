@@ -4,11 +4,11 @@ param name string
 @description('Azure region for the virtual network.')
 param location string
 
-@description('Address prefix for the virtual network (e.g., 10.0.0.0/16).')
-param addressPrefix string
+@description('Address prefix for the virtual network (e.g., 10.0.0.0/16). Ignored when ipamPoolId is set.')
+param addressPrefix string = ''
 
-@description('Address prefix for the default subnet (e.g., 10.0.0.0/24).')
-param subnetAddressPrefix string
+@description('Address prefix for the default subnet (e.g., 10.0.0.0/24). Ignored when ipamPoolId is set.')
+param subnetAddressPrefix string = ''
 
 @description('Tags to apply to the virtual network.')
 param tags object = {}
@@ -19,17 +19,32 @@ param nsgId string = ''
 @description('Additional subnets beyond the default subnet.')
 param additionalSubnets array = []
 
+@description('Optional IPAM pool resource ID. When set, addresses are allocated from the pool instead of using static prefixes.')
+param ipamPoolId string = ''
+
+@description('Number of IP addresses to allocate from the IPAM pool for the VNet address space.')
+param vnetIpAddressCount string = '256'
+
+@description('Number of IP addresses to allocate from the IPAM pool for the default subnet.')
+param subnetIpAddressCount string = '128'
+
+var nsgProperty = !empty(nsgId) ? { networkSecurityGroup: { id: nsgId } } : {}
+
+var staticSubnetProps = union({ addressPrefix: subnetAddressPrefix }, nsgProperty)
+
+var ipamSubnetProps = union({
+  ipamPoolPrefixAllocations: [
+    {
+      pool: { id: ipamPoolId }
+      numberOfIpAddresses: subnetIpAddressCount
+    }
+  ]
+}, nsgProperty)
+
 var defaultSubnet = [
   {
     name: 'default'
-    properties: {
-      addressPrefix: subnetAddressPrefix
-      networkSecurityGroup: !empty(nsgId)
-        ? {
-            id: nsgId
-          }
-        : null
-    }
+    properties: !empty(ipamPoolId) ? ipamSubnetProps : staticSubnetProps
   }
 ]
 
@@ -38,7 +53,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   location: location
   tags: tags
   properties: {
-    addressSpace: {
+    addressSpace: !empty(ipamPoolId) ? {
+      ipamPoolPrefixAllocations: [
+        {
+          pool: { id: ipamPoolId }
+          numberOfIpAddresses: vnetIpAddressCount
+        }
+      ]
+    } : {
       addressPrefixes: [
         addressPrefix
       ]

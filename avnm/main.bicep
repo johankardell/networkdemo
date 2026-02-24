@@ -331,44 +331,25 @@ module ipamPool 'modules/ipamPool.bicep' = {
 }
 
 // ---------------------------------------------------------------------------
-// IPAM Static CIDRs & VNets (avnm-ipam)
+// IPAM VNets (avnm-ipam) – addresses allocated dynamically from IPAM pool
 // ---------------------------------------------------------------------------
 
 var ipamVnets = [
-  { name: 'vnet-ipam-1', addressPrefix: '192.168.1.0/24', subnetPrefix: '192.168.1.0/25' }
-  { name: 'vnet-ipam-2', addressPrefix: '192.168.2.0/24', subnetPrefix: '192.168.2.0/25' }
-  { name: 'vnet-ipam-3', addressPrefix: '192.168.3.0/24', subnetPrefix: '192.168.3.0/25' }
-]
-
-module ipamStaticCidrs 'modules/staticCidr.bicep' = [
-  for vnet in ipamVnets: {
-    name: 'deploy-cidr-${vnet.name}'
-    scope: rgAvnmManager
-    params: {
-      name: vnet.name
-      ipamPoolName: ipamPool.outputs.name
-      addressPrefixes: [
-        vnet.addressPrefix
-      ]
-      cidrDescription: 'Static CIDR allocation for ${vnet.name}'
-    }
-  }
+  { name: 'vnet-ipam-1' }
+  { name: 'vnet-ipam-2' }
+  { name: 'vnet-ipam-3' }
 ]
 
 module ipamVnetDeployments 'modules/virtualNetwork.bicep' = [
-  for (vnet, i) in ipamVnets: {
+  for vnet in ipamVnets: {
     name: 'deploy-ipam-${vnet.name}'
     scope: rgIpam
     params: {
       name: vnet.name
       location: location
-      addressPrefix: vnet.addressPrefix
-      subnetAddressPrefix: vnet.subnetPrefix
+      ipamPoolId: ipamPool.outputs.id
       tags: tags
     }
-    dependsOn: [
-      ipamStaticCidrs[i]
-    ]
   }
 ]
 
