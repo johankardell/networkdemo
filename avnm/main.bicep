@@ -79,7 +79,7 @@ module meshVnetDeployments 'modules/virtualNetwork.bicep' = [
       location: location
       addressPrefix: vnet.addressPrefix
       subnetAddressPrefix: vnet.subnetPrefix
-      tags: tags
+      tags: union(tags, { mesh: 'true' })
     }
   }
 ]
