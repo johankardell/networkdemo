@@ -49,6 +49,42 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
   }
 }
 
+resource ruleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-05-01' = {
+  parent: firewallPolicy
+  name: 'DefaultRuleCollectionGroup'
+  properties: {
+    priority: 100
+    ruleCollections: [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'AllowAllOutbound'
+        priority: 100
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'AllowAllInternet'
+            ipProtocols: [
+              'Any'
+            ]
+            sourceAddresses: [
+              '*'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            destinationPorts: [
+              '*'
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
 resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   name: name
   location: location
