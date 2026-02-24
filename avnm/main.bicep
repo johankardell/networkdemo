@@ -85,6 +85,24 @@ module meshVnetDeployments 'modules/virtualNetwork.bicep' = [
 ]
 
 // ---------------------------------------------------------------------------
+// Mesh VMs (avnm-mesh)
+// ---------------------------------------------------------------------------
+
+module meshVmDeployments 'modules/linuxVm.bicep' = [
+  for (vnet, i) in meshVnets: {
+    name: 'deploy-vm-${vnet.name}'
+    scope: rgMesh
+    params: {
+      name: 'vm-${vnet.name}'
+      location: location
+      subnetId: meshVnetDeployments[i].outputs.defaultSubnetId
+      sshPublicKey: sshPublicKey
+      tags: tags
+    }
+  }
+]
+
+// ---------------------------------------------------------------------------
 // Mesh Network Group & Connectivity Configuration
 // ---------------------------------------------------------------------------
 
@@ -339,6 +357,18 @@ module securityVnet 'modules/virtualNetwork.bicep' = {
     addressPrefix: '10.20.0.0/16'
     subnetAddressPrefix: '10.20.0.0/24'
     nsgId: securityNsg.outputs.id
+    tags: tags
+  }
+}
+
+module securityVm 'modules/linuxVm.bicep' = {
+  name: 'deploy-vm-sec'
+  scope: rgSecurity
+  params: {
+    name: 'vm-sec'
+    location: location
+    subnetId: securityVnet.outputs.defaultSubnetId
+    sshPublicKey: sshPublicKey
     tags: tags
   }
 }

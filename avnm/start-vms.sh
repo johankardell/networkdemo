@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RESOURCE_GROUP="avnm-hubnspoke"
-VMS=("vm-spoke1" "vm-spoke2")
+declare -A RG_VMS=(
+  ["avnm-hubnspoke"]="vm-spoke1 vm-spoke2"
+  ["avnm-mesh"]="vm-vnet-1 vm-vnet-2 vm-vnet-3 vm-vnet-4"
+  ["avnm-security"]="vm-sec"
+)
 
-echo "Starting all demo VMs in ${RESOURCE_GROUP}..."
+echo "Starting all demo VMs..."
 
-for vm in "${VMS[@]}"; do
-  echo "  Starting ${vm}..."
-  az vm start --resource-group "$RESOURCE_GROUP" --name "$vm" --no-wait
+for rg in "${!RG_VMS[@]}"; do
+  for vm in ${RG_VMS[$rg]}; do
+    echo "  Starting ${vm} in ${rg}..."
+    az vm start --resource-group "$rg" --name "$vm" --no-wait
+  done
 done
 
-echo "Start commands sent. Use 'az vm list -g ${RESOURCE_GROUP} -d --query [].{name:name,powerState:powerState} -o table' to check status."
+echo "Start commands sent. Check status with:"
+echo "  az vm list -d --query [].{name:name,rg:resourceGroup,powerState:powerState} -o table"
