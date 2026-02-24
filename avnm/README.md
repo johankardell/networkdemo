@@ -7,7 +7,7 @@ Bicep deployment for demoing Azure Virtual Network Manager (AVNM) with mesh conn
 | Resource Group | Resources |
 |---|---|
 | `avnm-manager` | Azure Virtual Network Manager (`avnm-demo`), IPAM pool (`ipam-pool-demo` — 192.168.0.0/16), network groups, connectivity configs |
-| `avnm-mesh` | `vnet-1` (10.0.0.0/16), `vnet-2` (10.1.0.0/16), `vnet-3` (10.2.0.0/16), `vnet-4` (10.3.0.0/16) |
+| `avnm-mesh` | `vnet-mesh-1` (10.0.0.0/16), `vnet-mesh-2` (10.1.0.0/16), `vnet-mesh-3` (10.2.0.0/16), `vnet-mesh-4` (10.3.0.0/16) |
 | `avnm-hubnspoke` | `vnet-hub` (10.10.0.0/16), `vnet-spoke1` (10.11.0.0/16), `vnet-spoke2` (10.12.0.0/16) |
 | `avnm-ipam` | `vnet-ipam-1` (192.168.1.0/24), `vnet-ipam-2` (192.168.2.0/24), `vnet-ipam-3` (192.168.3.0/24) |
 | `avnm-security` | `vnet-sec` (10.20.0.0/16) with `nsg-security` on default subnet |

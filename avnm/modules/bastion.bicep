@@ -30,6 +30,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2024-05-01' = {
     name: 'Standard'
   }
   properties: {
+    enableTunneling: true
     ipConfigurations: [
       {
         name: 'bastion-ipconfig'

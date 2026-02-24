@@ -3,7 +3,7 @@ set -euo pipefail
 
 declare -A RG_VMS=(
   ["avnm-hubnspoke"]="vm-spoke1 vm-spoke2"
-  ["avnm-mesh"]="vm-vnet-1 vm-vnet-2 vm-vnet-3 vm-vnet-4"
+  ["avnm-mesh"]="vm-mesh-1 vm-mesh-2 vm-mesh-3 vm-mesh-4"
   ["avnm-security"]="vm-sec"
 )
 

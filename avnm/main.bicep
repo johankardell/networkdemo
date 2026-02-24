@@ -64,10 +64,10 @@ module avnm 'modules/virtualNetworkManager.bicep' = {
 // ---------------------------------------------------------------------------
 
 var meshVnets = [
-  { name: 'vnet-1', addressPrefix: '10.0.0.0/16', subnetPrefix: '10.0.0.0/24' }
-  { name: 'vnet-2', addressPrefix: '10.1.0.0/16', subnetPrefix: '10.1.0.0/24' }
-  { name: 'vnet-3', addressPrefix: '10.2.0.0/16', subnetPrefix: '10.2.0.0/24' }
-  { name: 'vnet-4', addressPrefix: '10.3.0.0/16', subnetPrefix: '10.3.0.0/24' }
+  { name: 'vnet-mesh-1', addressPrefix: '10.0.0.0/16', subnetPrefix: '10.0.0.0/24' }
+  { name: 'vnet-mesh-2', addressPrefix: '10.1.0.0/16', subnetPrefix: '10.1.0.0/24' }
+  { name: 'vnet-mesh-3', addressPrefix: '10.2.0.0/16', subnetPrefix: '10.2.0.0/24' }
+  { name: 'vnet-mesh-4', addressPrefix: '10.3.0.0/16', subnetPrefix: '10.3.0.0/24' }
 ]
 
 var bastionSubnet = [
@@ -111,10 +111,10 @@ module meshBastion 'modules/bastion.bicep' = {
 
 module meshVmDeployments 'modules/linuxVm.bicep' = [
   for (vnet, i) in meshVnets: {
-    name: 'deploy-vm-${vnet.name}'
+    name: 'deploy-vm-mesh-${i + 1}'
     scope: rgMesh
     params: {
-      name: 'vm-${vnet.name}'
+      name: 'vm-mesh-${i + 1}'
       location: location
       subnetId: meshVnetDeployments[i].outputs.defaultSubnetId
       sshPublicKey: sshPublicKey

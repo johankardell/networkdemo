@@ -43,7 +43,7 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
   tags: tags
   properties: {
     sku: {
-      tier: 'Basic'
+      tier: 'Standard'
     }
     threatIntelMode: 'Alert'
   }
@@ -92,7 +92,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   properties: {
     sku: {
       name: 'AZFW_VNet'
-      tier: 'Basic'
+      tier: 'Standard'
     }
     firewallPolicy: {
       id: firewallPolicy.id
