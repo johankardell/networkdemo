@@ -419,7 +419,7 @@ module allowPort9090Rule 'modules/securityAdminRule.bicep' = {
     ]
     sources: [
       {
-        addressPrefix: '*'
+        addressPrefix: '1.2.3.4/32'
         addressPrefixType: 'IPPrefix'
       }
     ]
