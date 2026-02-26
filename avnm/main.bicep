@@ -451,6 +451,64 @@ module allowPort9090Rule 'modules/securityAdminRule.bicep' = {
   }
 }
 
+module allowPort443Rule 'modules/securityAdminRule.bicep' = {
+  name: 'deploy-allow-port-443-rule'
+  scope: rgAvnmManager
+  params: {
+    name: 'allow-443'
+    ruleCollectionName: securityAdminConfig.outputs.ruleCollectionName
+    access: 'Allow'
+    direction: 'Inbound'
+    priority: 200
+    protocol: 'Tcp'
+    ruleDescription: 'Allow inbound TCP port 443'
+    destinationPortRanges: [
+      '443'
+    ]
+    sources: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+    destinations: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+  }
+}
+
+module denyPort21Rule 'modules/securityAdminRule.bicep' = {
+  name: 'deploy-deny-port-21-rule'
+  scope: rgAvnmManager
+  params: {
+    name: 'deny-21'
+    ruleCollectionName: securityAdminConfig.outputs.ruleCollectionName
+    access: 'Deny'
+    direction: 'Inbound'
+    priority: 300
+    protocol: 'Tcp'
+    ruleDescription: 'Deny inbound TCP port 21'
+    destinationPortRanges: [
+      '21'
+    ]
+    sources: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+    destinations: [
+      {
+        addressPrefix: '*'
+        addressPrefixType: 'IPPrefix'
+      }
+    ]
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Outputs for AVNM commit (used by deploy.sh)
 // ---------------------------------------------------------------------------
